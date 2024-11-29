@@ -305,6 +305,7 @@ pmlsbp <- function(formula,data, model="SAR", grouping=2, W=NULL,zero.policy =sp
      #optimizer.call$feval <-quote(iterlim)
      optimizer.call$fn <- ifelse(model=="SAR" ,quote(logLIK_SAR), quote(logLIK_SARAR))
      optimizer.call$bobyqa <- quote(TRUE)
+     optimizer.call$control <- quote(list(iprint=print.level , maxfun=iterlim) )
    }
 
    optimizer.call$X <-  quote(Xall)
@@ -323,7 +324,9 @@ pmlsbp <- function(formula,data, model="SAR", grouping=2, W=NULL,zero.policy =sp
      return$estimate <- return$par
    }
    if (return$code!=0) {
-     cat(paste0("converge not achieved: ",return$message))
+     cat("----------------------------------------------\n WARNING \n")
+     cat(paste0("converge not achieved: ",return$message,"\n"))
+     cat("----------------------------------------------\n")
      return(NULL)
    }
 
@@ -354,9 +357,14 @@ pmlsbp <- function(formula,data, model="SAR", grouping=2, W=NULL,zero.policy =sp
     G <- diag(c(rep(1,length(return$estimate)-2), attr(return$rho,"jacobian"), attr(return$lambda,"jacobian")))
   }
 
-
   ##maxlik uses rho_tilde for the maximization problem, to obtain the standard error the gradient must be adjusted to work with rho using the cain rule
-
+if (method=='bobyqa') {
+  return$gradientObs<-attr(obFun, 'gradient')
+  return$hessian <- quote(-numericHessian(fn, t0=return$estimate, X=Xall, y = y, eig = eig, W = W, qu = qu, method_inv = method_inv,
+                                    groups = groups, mvtnorm_control = mvtnorm_control, bobyqa=T))
+  return$hessian[[2]][[2]] <- obFun.call[[1]]
+  return$hessian<- eval(return$hessian)
+}
   invH <- solve(as(return$hessian,"Matrix")) ##### devo tirare fuori hessiano
   V <-  list()
   if ("asy" %in% vce.type) {
