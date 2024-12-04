@@ -24,7 +24,7 @@ group_matrices <- function(y,X,grouping=2, M=25e3, sim_type="mc" ) {
   groups
 }
 ################################f_sar
-f_sar <- function (rho_tilde,W,X,eig,qu=Inf,method_inv) {
+f_sar <- function (rho_tilde,W,X,eig,qu=Inf,method_inv,  tol.solve= .Machine$double.eps) {
   rho  <- eig$W[1]^(-1) + ((eig$W[2]^(-1)-eig$W[1]^(-1))/(1+exp(-rho_tilde)))
   n<-dim(W)[1]
   if (rho==0) {
@@ -39,7 +39,7 @@ f_sar <- function (rho_tilde,W,X,eig,qu=Inf,method_inv) {
   }
 
   if (method_inv=="solve") {
-    Inv_rho <-  solve(as(diag(n)-rho*W,"Matrix"))
+    Inv_rho <-  solve(as(diag(n)-rho*W,"Matrix"), tol=tol.solve)
     Sigma_rho <- tcrossprod(Inv_rho)
   }
   else {
@@ -70,10 +70,11 @@ f_sar <- function (rho_tilde,W,X,eig,qu=Inf,method_inv) {
 
 
 logLIK_SAR <- function(theta,y,W,X,eig,qu=Inf,method_inv="solve", groups,
-                       mvtnorm_control=list(M=25e3, tol = .Machine$double.eps, fast = FALSE), bobyqa=F) {
+                       mvtnorm_control=list(M=25e3, tol = .Machine$double.eps, fast = FALSE), bobyqa=F,
+                       tol.solve= .Machine$double.eps) {
   beta <- theta[ - length(theta)  ]
   rho_tilde <- tail(theta,1)
-  f_rho<- f_sar(rho_tilde,W,X,eig,qu,method_inv)
+  f_rho<- f_sar(rho_tilde,W,X,eig,qu,method_inv, tol.solve)
   Sigma <- f_rho$Sigma_rho
   xb <- f_rho$X_rho%*%beta
   y_list<-split(y,groups$y)

@@ -93,7 +93,7 @@ pmlsbp <- function(formula,data, model="SAR", grouping=2, W=NULL,zero.policy =sp
                          M=NULL, formula_xlag=NULL, W2=NULL,  method_inv="chol",
                          start=NULL, subset=NULL, na.action=na.fail,qu=Inf, iterlim=1000,
                          mvtnorm_control=list(M=25e3, sim_type="mc" , tol = .Machine$double.eps, fast = FALSE),
-                         finalHessian=TRUE, method="bfgsr",print.level=2, vce.type=c("asy") , Conley=list(coords=NULL,LM=2),nBoot=1e3 , spectral=F, ...) {
+                         finalHessian=TRUE, method="bfgsr",print.level=2, vce.type=c("asy") , Conley=list(coords=NULL,LM=2),nBoot=1e3 , spectral=F, tol.solve= .Machine$double.eps, ...) {
   match.arg(model, c("SAR","SARAR"), several.ok = FALSE)
   match.arg(method_inv, c("chol","solve","fast"), several.ok = FALSE)
   stopifnot(is.numeric(qu))
@@ -298,6 +298,7 @@ pmlsbp <- function(formula,data, model="SAR", grouping=2, W=NULL,zero.policy =sp
      optimizer.call[[1L]] <- quote(maxLik::maxLik)
      optimizer.call$logLik <- ifelse(model=="SAR" ,quote(logLIK_SAR), quote(logLIK_SARAR))
      optimizer.call$start <- quote(start)
+     optimizer.call$tol.solve <-quote(tol.solve)
    } else {
      optimizer.call <- call[c(1L)]
      optimizer.call[[1L]] <- quote(minqa::bobyqa)
